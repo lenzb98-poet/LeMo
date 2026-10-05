@@ -5,7 +5,7 @@
 //   Wand + Boden + Möbel          -> gehen 1:1 mit
 //   Vordergrund (Pflanzen, Efeu)  -> schneller als alles andere
 (function () {
-  const VW = 256, VH = 144;          // Bildschirm
+  const VW = 192, VH = 144;          // Bildschirm (4:3)
   const WORLD_W = 640;               // Zimmerbreite
   const WALL_BASE = 104;             // Wand trifft Boden
   const FURN_BASE = 114;             // Möbel stehen hier
