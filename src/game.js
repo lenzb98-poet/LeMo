@@ -97,16 +97,31 @@
     ctx.drawImage(img, x - HALF, y - FEET);
   }
 
-  let last = performance.now();
+  let running = false;
+  let last = 0;
   function loop(now) {
+    if (!running) return;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     update(dt);
     draw();
     requestAnimationFrame(loop);
   }
-  requestAnimationFrame(loop);
 
-  // Für Tests / Debugging
-  window.__game = { player, sprites };
+  function start() {
+    if (running) return;
+    running = true;
+    player.tx = player.ty = null;
+    marker = null;
+    fit();
+    last = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  function stop() {
+    running = false;
+  }
+
+  // Für Homescreen, Tests und Debugging
+  window.Game = { start, stop, player, sprites };
 })();

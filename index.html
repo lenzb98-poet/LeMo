@@ -4,21 +4,38 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lenz Memory's</title>
-  <style>
-    html, body { margin: 0; height: 100%; background: #0b1230; overflow: hidden; }
-    body { display: flex; align-items: center; justify-content: center; }
-    canvas {
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      cursor: crosshair;
-      touch-action: none;
-      max-width: 100vw; max-height: 100vh;
-    }
-  </style>
+  <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
-  <canvas id="game"></canvas>
+  <!-- Homescreen -->
+  <main id="home" class="screen">
+    <header>
+      <canvas id="logo" width="64" height="64"></canvas>
+      <h1>Lenz Memory's</h1>
+      <p class="sub">Spiel dein Leben noch einmal durch</p>
+    </header>
+
+    <section>
+      <h2>Staffeln des Lebens</h2>
+      <div class="grid" id="seasons"></div>
+    </section>
+
+    <section>
+      <h2>Demo</h2>
+      <div class="grid" id="demos"></div>
+    </section>
+
+    <p id="hint" class="hint"></p>
+  </main>
+
+  <!-- Spiel -->
+  <div id="stage" class="screen hidden">
+    <button id="back" type="button">&larr; Menü</button>
+    <canvas id="game"></canvas>
+  </div>
+
   <script src="src/sprite.js"></script>
   <script src="src/game.js"></script>
+  <script src="src/home.js"></script>
 </body>
 </html>

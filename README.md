@@ -2,12 +2,18 @@
 
 Ein Spiel, in dem man Erinnerungen durchspielen kann.
 
-## Stand: Schritt 1 – Figur zum Laufen bringen
+## Stand
 
-- Blauer Bildschirm, Klick = die Figur läuft dorthin
-- 64×64-Pixel-Art-Figur mit Gehanimation (vorn, hinten, links, rechts)
-- Der Sprite wird komplett per Code gezeichnet (`src/sprite.js`)
+- **Homescreen** mit "Staffeln des Lebens" (noch gesperrt) und der Demo
+- **Demo "Laufen"**: blauer Bildschirm, Klick = die 64×64-Pixel-Figur läuft dorthin (mit Gehanimation in 4 Richtungen)
 
 ## Starten
 
 `index.html` im Browser öffnen – kein Build nötig.
+
+## Aufbau
+
+- `src/home.js` – Homescreen; Staffeln und Demos stehen oben in den Listen `SEASONS` / `DEMOS`
+- `src/game.js` – Spiel (Klick zum Laufen)
+- `src/sprite.js` – Die Figur, per Code gezeichnet
+- `src/style.css` – Look
