@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LeMo</title>
-  <link rel="stylesheet" href="src/style.css?v=9">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap">
+  <link rel="stylesheet" href="src/style.css?v=10">
 </head>
 <body>
   <!-- Hauptmenü -->
@@ -13,10 +15,20 @@
       <canvas id="menuArt"></canvas>
       <header class="brand">
         <h1>LeMo</h1>
-        <p class="sub">Spiel dein Leben noch einmal durch</p>
-        <p id="hint" class="hint"></p>
+        <p class="sub">Lenz Memory's</p>
       </header>
-      <div class="tower" id="tower"></div>
+      <p id="menuCaption"></p>
+      <div id="slots"></div>
+      <section id="chapter" class="hidden" aria-live="polite">
+        <div class="kicker" id="chKicker"></div>
+        <h2 id="chTitle"></h2>
+        <p id="chDesc"></p>
+        <p id="chStatus"></p>
+        <div class="actions">
+          <button type="button" id="chPlay">Spielen</button>
+          <button type="button" id="chBack">Zurück in den Turm</button>
+        </div>
+      </section>
     </div>
   </main>
 
@@ -38,13 +50,13 @@
     </div>
   </div>
 
-  <script src="src/sprite.js?v=9"></script>
-  <script src="src/bed.js?v=9"></script>
-  <script src="src/world.js?v=9"></script>
-  <script src="src/memories.js?v=9"></script>
-  <script src="src/memory.js?v=9"></script>
-  <script src="src/game.js?v=9"></script>
-  <script src="src/menuart.js?v=9"></script>
-  <script src="src/home.js?v=9"></script>
+  <script src="src/sprite.js?v=10"></script>
+  <script src="src/bed.js?v=10"></script>
+  <script src="src/world.js?v=10"></script>
+  <script src="src/memories.js?v=10"></script>
+  <script src="src/memory.js?v=10"></script>
+  <script src="src/game.js?v=10"></script>
+  <script src="src/menuart.js?v=10"></script>
+  <script src="src/home.js?v=10"></script>
 </body>
 </html>
