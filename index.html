@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lenz Memory's</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0b1230; overflow: hidden; }
+    body { display: flex; align-items: center; justify-content: center; }
+    canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      cursor: crosshair;
+      touch-action: none;
+      max-width: 100vw; max-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <script src="src/sprite.js"></script>
+  <script src="src/game.js"></script>
+</body>
+</html>
