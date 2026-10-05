@@ -1,9 +1,11 @@
 (function () {
-  const W = 320, H = 180;            // Spielwelt in Pixeln, wird hochskaliert
-  const SPEED = 70;                  // Pixel pro Sekunde
+  const W = 320, H = 180;            // Bildschirm in Pixeln, wird hochskaliert
+  const SPEED = 90;                  // Pixel pro Sekunde
   const PX_PER_FRAME = 4;            // Distanz pro Animationsframe (kein Rutschen)
   const FEET = 62;                   // y-Position der Füße im 64px-Sprite
   const HALF = Sprite.SIZE / 2;
+  const MIN_X = 24;
+  const MAX_X = Bed.STAND.x;         // am Bett ist Schluss
 
   const canvas = document.getElementById('game');
   canvas.width = W;
@@ -21,41 +23,41 @@
   fit();
 
   const sprites = Sprite.buildSprites();
+  World.build();
 
   const player = {
-    x: W / 2, y: H - 30,             // Position der Füße
-    tx: null, ty: null,              // Ziel
-    dir: 'down',
+    x: MAX_X - 40,                   // Start: ganz rechts, neben dem Bett
+    dir: 'left',
+    tx: null,                        // Ziel (nur noch links/rechts)
     walked: 0,
     mode: 'free',                    // free | settling | lying | rising
     timer: 0,
     onArrive: null,
     queued: null,                    // Klick, der nach dem Aufstehen ausgeführt wird
   };
+  let camX = 0;
   let mood = 0;                      // 0 = normal, 1 = ganz dunkel
   let clock = 0;
+  let marker = null;                 // { x, t }
+  const keys = { left: false, right: false };
   const caption = document.getElementById('caption');
   const say = (t) => { if (caption) caption.textContent = t; };
-  let marker = null;                 // { x, y, t }
 
-  function walkTo(x, y, showMarker) {
-    player.tx = Math.min(W - HALF / 2, Math.max(HALF / 2, x));
-    player.ty = Math.min(H - 2, Math.max(FEET + 1, y));
-    marker = showMarker ? { x: player.tx, y: player.ty, t: 0 } : null;
+  const camTarget = () => Math.min(World.W - W, Math.max(0, player.x - W / 2));
 
-    const dx = player.tx - player.x;
-    const dy = player.ty - player.y;
-    if (Math.abs(dx) >= Math.abs(dy)) player.dir = dx < 0 ? 'left' : 'right';
-    else player.dir = dy < 0 ? 'up' : 'down';
+  function walkTo(x, showMarker) {
+    player.tx = Math.min(MAX_X, Math.max(MIN_X, x));
+    marker = showMarker ? { x: player.tx, t: 0 } : null;
+    player.dir = player.tx < player.x ? 'left' : 'right';
   }
 
   function handleClick(x, y) {
     if (Bed.hit(x, y)) {
       player.onArrive = settle;
-      walkTo(Bed.STAND.x, Bed.STAND.y, false);
+      walkTo(Bed.STAND.x, false);
     } else {
       player.onArrive = null;
-      walkTo(x, y, true);
+      walkTo(x, true);
     }
   }
 
@@ -74,10 +76,30 @@
 
   canvas.addEventListener('pointerdown', (e) => {
     const r = canvas.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * W;
+    const x = ((e.clientX - r.left) / r.width) * W + Math.round(camX);   // Weltkoordinate
     const y = ((e.clientY - r.top) / r.height) * H;
     if (player.mode === 'lying') rise({ x, y });
     else if (player.mode === 'free') handleClick(x, y);
+  });
+
+  // Tastatur: Pfeile oder A/D
+  const keyDir = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
+  addEventListener('keydown', (e) => {
+    const k = keyDir[e.key];
+    if (!k) return;
+    keys[k] = true;
+    if (player.mode === 'lying') rise(null);
+    e.preventDefault();
+  });
+  addEventListener('keyup', (e) => {
+    const k = keyDir[e.key];
+    if (!k) return;
+    keys[k] = false;
+    if (!keys.left && !keys.right && player.keyWalking) {
+      player.keyWalking = false;
+      player.tx = null;
+      player.walked = 0;
+    }
   });
 
   function update(dt) {
@@ -99,36 +121,44 @@
         }
       }
     }
-    if (player.tx === null) return;
-    const dx = player.tx - player.x;
-    const dy = player.ty - player.y;
-    const dist = Math.hypot(dx, dy);
-    const step = SPEED * dt;
-    if (dist <= step) {
-      player.x = player.tx;
-      player.y = player.ty;
-      player.tx = player.ty = null;
-      player.walked = 0;
-      const cb = player.onArrive;
+
+    // Tastatursteuerung
+    if (player.mode === 'free' && (keys.left !== keys.right)) {
+      player.keyWalking = true;
       player.onArrive = null;
-      if (cb) cb();
-      return;
+      marker = null;
+      walkTo(player.x + (keys.left ? -40 : 40), false);
     }
-    player.x += (dx / dist) * step;
-    player.y += (dy / dist) * step;
-    player.walked += step;
+
+    if (player.tx !== null) {
+      const dx = player.tx - player.x;
+      const step = SPEED * dt;
+      if (Math.abs(dx) <= step) {
+        player.x = player.tx;
+        player.tx = null;
+        player.walked = 0;
+        const cb = player.onArrive;
+        player.onArrive = null;
+        if (cb) cb();
+      } else {
+        player.x += Math.sign(dx) * step;
+        player.walked += step;
+      }
+    }
+
+    camX += (camTarget() - camX) * Math.min(1, dt * 5);
   }
 
   function drawMarker() {
     if (!marker) return;
     const pulse = Math.floor(marker.t * 6) % 2;
     const r = 3 + pulse;
-    const x = Math.round(marker.x), y = Math.round(marker.y);
+    const x = Math.round(marker.x), y = World.GROUND + 4;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(x - r, y, 2, 1);
     ctx.fillRect(x + r - 1, y, 2, 1);
-    ctx.fillRect(x, y - Math.ceil(r / 2), 1, 2);
-    ctx.fillRect(x, y + Math.ceil(r / 2) - 1, 1, 2);
+    ctx.fillRect(x, y - 2, 1, 2);
+    ctx.fillRect(x, y + 1, 1, 2);
   }
 
   function drawShadow(x, y) {
@@ -151,17 +181,19 @@
   }
 
   function draw() {
-    ctx.fillStyle = '#2f6bdc';
-    ctx.fillRect(0, 0, W, H);
+    const cam = Math.round(camX);
+    World.drawBack(ctx, cam, clock);
+
+    // Weltkoordinaten: alles zwischen save/restore wird mit der Kamera verschoben
+    ctx.save();
+    ctx.translate(-cam, 0);
     drawMarker();
 
-    const lying = player.mode === 'lying' || (player.mode === 'rising' && player.timer > 0.35);
     const hidden = player.mode === 'lying' || (player.mode === 'rising' && player.timer > 0.35);
-    const x = Math.round(player.x), y = Math.round(player.y);
-    const behindBed = y < Bed.BASE_Y;
+    Bed.draw(ctx, hidden, clock);
 
-    const drawPlayer = () => {
-      if (hidden) return;
+    if (!hidden) {
+      const x = Math.round(player.x), y = World.GROUND;
       drawShadow(x, y);
       const set = sprites[player.dir];
       const moving = player.tx !== null;
@@ -169,17 +201,21 @@
         ? set.walk[Math.floor(player.walked / PX_PER_FRAME) % Sprite.WALK_FRAMES]
         : set.idle;
       ctx.drawImage(img, x - HALF, y - FEET);
-    };
+    }
+    ctx.restore();
 
-    if (behindBed) drawPlayer();
-    Bed.draw(ctx, lying, clock);
-    if (!behindBed) drawPlayer();
+    World.drawFront(ctx, cam);
 
     if (mood > 0.01) {
       ctx.fillStyle = 'rgba(24, 28, 64, ' + mood.toFixed(3) + ')';
       ctx.fillRect(0, 0, W, H);
     }
-    if (player.mode === 'lying') drawThoughts();
+    if (player.mode === 'lying') {
+      ctx.save();
+      ctx.translate(-cam, 0);
+      drawThoughts();
+      ctx.restore();
+    }
   }
 
   let running = false;
@@ -196,12 +232,13 @@
   function start() {
     if (running) return;
     running = true;
-    player.tx = player.ty = null;
+    player.tx = null;
     player.mode = 'free';
     player.timer = 0;
     mood = 0;
     say('');
     marker = null;
+    camX = camTarget();
     fit();
     last = performance.now();
     requestAnimationFrame(loop);
@@ -212,5 +249,5 @@
   }
 
   // Für Homescreen, Tests und Debugging
-  window.Game = { start, stop, player, sprites };
+  window.Game = { start, stop, player, sprites, get camX() { return camX; } };
 })();

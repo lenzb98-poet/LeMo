@@ -1,10 +1,10 @@
 // Das Bett in der rechten Ecke (nach deinem Foto: weiße Matratze, dunkler
 // Rahmen, gelb gestreifte Decke) und Lenz, wie er darin liegt.
 (function () {
-  const BX = 228;                 // linke Kante des Bettes in der Spielwelt
+  const BX = 840;                 // linke Kante des Bettes in der Spielwelt (rechtes Weltende)
   const TOP = 146;                // Oberkante der Matratze
   const AREA = { x: BX, y: 116, w: 86, h: 56 };   // anklickbarer Bereich
-  const STAND = { x: BX - 12, y: 165 };           // hier steht Lenz neben dem Bett
+  const STAND = { x: BX - 12, y: 170 };           // hier steht Lenz neben dem Bett
 
   const K = {
     frame: '#1b1b25', frameLight: '#2c2c3a',
@@ -113,5 +113,5 @@
     drawDuvet(ctx, lying, t);
   }
 
-  window.Bed = { AREA, STAND, hit, draw, BASE_Y: 166 };
+  window.Bed = { AREA, STAND, hit, draw };
 })();
