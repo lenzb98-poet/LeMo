@@ -1,6 +1,6 @@
-# Lenz Memory's
+# LeMo
 
-Ein Spiel, in dem man Erinnerungen durchspielen kann.
+LeMo (Lenz Memory's) – ein Spiel, in dem man Erinnerungen durchspielen kann.
 
 ## Stand
 
