@@ -56,6 +56,9 @@ body { font-family: "Courier New", ui-monospace, monospace; font-weight: 700; }
 #chapter h2 { margin: 0.6cqw 0 1.2cqw; font-family: 'Pixelify Sans', 'Courier New', monospace; font-size: 4cqw; line-height: 1; color: #fff1cf; }
 #chapter p { margin: 0 0 1cqw; font-size: max(12px, 1.35cqw); line-height: 1.45; }
 #chStatus { color: #8fa3b0; font-size: max(11px, 1.15cqw) !important; }
+#chapter .tip { margin: 1.4cqw 0 0; color: #6f8794; font-size: max(10px, 1cqw) !important; }
+#menuStage.open { cursor: pointer; }
+#chapter { cursor: default; }
 #chapter .actions { display: flex; flex-wrap: wrap; gap: 1cqw; margin-top: 1.6cqw; }
 #chapter button {
   font-family: 'Pixelify Sans', 'Courier New', monospace; font-size: max(12px, 1.4cqw); cursor: pointer;

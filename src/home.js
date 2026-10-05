@@ -80,6 +80,15 @@
   }
 
   el('chBack').addEventListener('click', closeChapter);
+
+  // Neben die gezogene Karte tippen = Karte zurückstecken, zurück zum Kartenhaus
+  menu.addEventListener('pointerdown', (e) => {
+    if (open === null || panel.contains(e.target)) return;
+    const [ax, ay] = toArt(e.clientX, e.clientY);
+    const r = MenuArt.cardRect();
+    if (ax >= r.x && ax <= r.x + r.w && ay >= r.y && ay <= r.y + r.h) return;
+    closeChapter();
+  });
   el('chPlay').addEventListener('click', () => { if (open !== null && CHAPTERS[open].playable) showGame(); });
 
   // Augen folgen der Maus
