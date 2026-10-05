@@ -1,7 +1,7 @@
 // Hauptmenü-Grafik im Stil von Dead Cells: dunkle Welt, warmes Hauptlicht vom Kartenturm,
 // kühles Türkis als Kantenlicht von hinten, Nebel, Funken und schwebende Karten.
-// Alles wird per Code gemalt (384x216 Pixel): Formen bekommen Höhen/Normalen, werden
-// beleuchtet und über Farbrampen mit leichtem Dithering in Pixel verwandelt.
+// Hintergrund und Karten werden per Code gemalt (384x216 Pixel, Farbrampen + Dithering).
+// Die Figur ist ein handgesetztes Pixel-Porträt (Zeichen-Raster), 3-fach vergrößert.
 // Der Kartenturm ist ein echtes Kartenhaus aus Λ-Paaren und flachen Karten.
 (function () {
   const W = 384, H = 216;
@@ -30,8 +30,6 @@
     const f = clamp((p - i - 0.5) * 2.2 + 0.5);
     return f > BAYER[y & 3][x & 3] ? r[i + 1] : r[i];
   }
-  const norm3 = (x, y, z) => { const l = Math.hypot(x, y, z) || 1; return [x / l, y / l, z / l]; };
-  const KEY = norm3(0.8, -0.28, 0.55);          // warmes Licht vom Kartenturm (rechts)
   function inPoly(pts, x, y) {
     let c = false;
     for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
@@ -56,20 +54,8 @@
     x.putImageData(new ImageData(new Uint8ClampedArray(buf.buffer.slice(0)), w, h), 0, 0);
     return c;
   }
-  // Randlicht (türkis) – stark an Kanten, die nach links/hinten zeigen
-  const rimOf = (n) => clamp((1 - n[2]) * 1.9 - 0.55) * clamp(-n[0] * 1.2 - n[1] * 0.25 + 0.05);
 
-  // ---------- Paletten ----------
-  const P = {
-    skin: ramp(['#14091a', '#2c1226', '#52202e', '#86363a', '#bc5a46', '#e48a5c', '#ffbf86']),
-    hair: ramp(['#120a14', '#2e1a1c', '#5c3a1e', '#9a6c24', '#d4a234', '#f6d264', '#fff1b0']),
-    shirt: ramp(['#080a18', '#141a32', '#283252', '#4a5578', '#7e88a8', '#b8bfd2']),
-    navy: ramp(['#04050e', '#0a0f26', '#141e48', '#22336e']),
-    sand: ramp(['#14140c', '#2e2c16', '#5a5628', '#8a843c']),
-    rim: ramp(['#163c4a', '#23707e', '#41b4bc', '#8ff0ea', '#d8fff8']),
-    sclera: ramp(['#1e1622', '#4a3a48', '#8a7a80', '#c2b2ae']),
-    iris: ramp(['#0a2a36', '#145a6a', '#2c98a6', '#6fe0e6']),
-  };
+
   const OUT = pack(hex('#04030a'));
 
   // ---------- Hintergrund (abstrakt) ----------
@@ -150,187 +136,84 @@
     return bufCanvas(buf, W, H);
   }
 
-  // ---------- Die Figur ----------
-  // 3/4-Ansicht nach rechts: fernes Auge nah an der Kontur, Nase ragt über die Wange hinaus.
-  const EYES = [
-    { cx: 94, cy: 106, hw: 8.5, hh: 3.7, ir: 3.1, pr: 1.3, maxX: 4.5, maxY: 1.4 },
-    { cx: 126, cy: 105, hw: 5.6, hh: 3.4, ir: 2.6, pr: 1.1, maxX: 2.6, maxY: 1.2 },
+  // ---------- Die Figur: handgesetztes Pixel-Porträt (44x56, im Bild 3-fach) ----------
+  // Jedes Zeichen ist ein Pixel, '.' ist durchsichtig. Farben siehe PORTRAIT_PAL.
+  const PORTRAIT_PAL = { 'K': '#120a10', 'c': '#4fc8cc', 'C': '#a8f0ec', '1': '#5a3616', '2': '#94621e', '3': '#d39a34', '4': '#f2cc5e', '5': '#fff0a8', 'a': '#4a2026', 'b': '#8c4038', 'd': '#cc7452', 'e': '#f0a474', 'f': '#ffd2a6', 'r': '#5a1e24', 'R': '#a8484a', 'w': '#e4dad2', 'W': '#9c8c8e', 'i': '#2a8fa0', 'I': '#86e4e6', 'm': '#161c36', 'n': '#2a3868', 'o': '#6c78a2', 'p': '#b8c0d8', 'q': '#e8ecf6', 'y': '#a8a040', 'Y': '#d2ca62' };
+  const PORTRAIT = [
+    '............................................',
+    '..................ccccKKKKKKKKK.............',
+    '................cc3335555555554KK...........',
+    '..............cc33345555555555554KK.........',
+    '............cc222334533333334455554KK.......',
+    '...........c2222223333333333344455544K......',
+    '..........c222222233333333333444455544K.....',
+    '..........c222222223333333333344445544K.....',
+    '.........c12222222223333333333344455544K....',
+    '.........c12222222223333333333344445544K....',
+    '........c1112222222223333333333344355444K...',
+    '........c1111222222222333333333234455444K...',
+    '........c1111222222222233333233333344444K...',
+    '........c1111122222222233233333233444KKKK...',
+    '........c11111122222222233332333d3ddK.......',
+    '........c11111112222b22b22b33b3dedeedK......',
+    '.........c122111132bb2bdb2dbbddeeeeeeK......',
+    '.........c122112132b1111dbdddd111eeeeK......',
+    '.........c12212213bKKKKKKddddKKKKKeeeK......',
+    '........c212212213bKwwwwbddddewwwKeeeK......',
+    '........c212212213bbWwwwddddddWwwKeeefK.....',
+    '........c212212213bbbbbbdddddddddeeeeffK....',
+    '........c212212213bbbbddddddddefededeffK....',
+    '........c212212213bbbbddddddddeffebbdeKK....',
+    '........c212212213bbbbdddddddeeeeeeaKK......',
+    '........c212212213bbbbddddddddeeeeeeeK......',
+    '........c212212213bbbbbddddddddeeeeeeK......',
+    '.......c1212212213bbbbbbdddddddeerrbeK......',
+    '.......c1212212K13bbbbbbbddRrrrrreeeK.......',
+    '.......cK21K21K.c3KbbbbbbbddeffdeeeeK.......',
+    '.......K.KK.K1K.KK.KKbbbbbbdddddeeeK........',
+    '.......K..K..KK.KK...KKbbbbbeedddKK.........',
+    '.......................KbbbbbdddK...........',
+    '.......................KabbbbdeK............',
+    '.......................KbbbbdddK............',
+    '.......................KbbbbdddK............',
+    '......................KbbbbbddddK...........',
+    '......................KbbbbddddK............',
+    '...................KKKpbbbbdddddKK..........',
+    '................KKKoopppbbbddddqqqKKK.......',
+    '...............KnooonoppbbbddddqqpppnK......',
+    '.............KKnnnnnnnnppbbdddqqnnnnnnKK....',
+    '............KnnnooonoooppbbdddqqpppnpppnK...',
+    '..........KKnnonooonooonppbddqqnpppnpppnpKK.',
+    '.........KmnnnnooonooonoppbddqqpppnpppnpppK.',
+    '........KymyyynYYYnYYYnYYppdqqnYYYnYYYnYYYnK',
+    '.......KnmnnnmooonooonoooppdqqpppnpppnpppnpK',
+    '......KnnmnnnmooonooonooonoopnpppnpppnpppnpK',
+    '.....KnnmnnnmooonooonooonooonpppnpppnpppnppK',
+    '....KmmmmmmmmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnK',
+    '...KmnnmnnnmnoonooonooonooonpppnpppnpppnpppK',
+    '..KmnnnmnnnmnoonooonooonooonpppnpppnpppnpppK',
+    '..KmnnmnnnmnnonooonooonooonoppnpppnpppnpppnK',
+    '.KmyyymyyymyYYnYYYnYYYnYYYnYYYnYYYnYYYnYYYnK',
+    'KmmnnmnnnmnnonooonooonooonoopnpppnpppnpppnpK',
+    'mmmnnmnnnmnnonooonooonooonoopnpppnpppnpppnpp',
   ];
-  const NOSE = [[132, 103], [146, 121], [143, 124], [136, 124], [133, 121]];
-  const V_NECK = [[91, 146], [121, 146], [106, 172]];
+  const PS = 3, POX = 28, POY = 48;              // Vergrößerung und Position im Menübild
+  // Augen: Augenweiß-Felder im Raster; die Iris (2x2) wandert links/mitte/rechts
+  const EYES = [
+    { x0: 20, w: 4, y0: 19, irisX: [20, 21, 22], lid: 'd' },
+    { x0: 30, w: 3, y0: 19, irisX: [30, 30, 31], lid: 'd' },
+  ];
 
-  // Unterkante des Ponys: unregelmäßige, nach rechts gekämmte Strähnenspitzen
-  function bangEdge(x) {
-    const base = 100 - (x - 56) * 0.1;
-    const sx = x + (x - 56) * 0.12;
-    const wdt = 6 + Math.floor(hash(Math.floor(sx / 7), 2) * 4);
-    const k = Math.floor(sx / wdt), f = sx / wdt - k;
-    const tip = Math.pow(Math.max(0, 1 - Math.abs(2 * f - 0.8) * 1.1), 1.4);
-    const len = 2 + hash(k, 5) * 7 + (k === 14 ? 7 : 0);
-    return base - 4 + tip * len;
-  }
-  const ell = (x, y, cx, cy, rx, ry) => Math.pow((x - cx) / rx, 2) + Math.pow((y - cy) / ry, 2);
-  const smax = (a, b, k) => { const h = clamp(0.5 + 0.5 * (a - b) / k); return a * h + b * (1 - h) + k * h * (1 - h); };
-
-  // Haar: Krone mit fransiger Kante + seitlich herabfallende Strähnen (ein Stück)
-  function crownR(x, y) {
-    const ang = Math.atan2(y - 70, x - 100);
-    return ell(x, y, 100, 70, 55, 48) * (1 + 0.035 * Math.sin(ang * 23) + 0.025 * Math.sin(ang * 41 + 1));
-  }
-  function sideBottom(x) {
-    const k = Math.floor(x / 5), f = x / 5 - k;
-    return 150 + (x - 44) * 0.25 + hash(k, 8) * 10 * (1 - Math.abs(2 * f - 1));
-  }
-  function inHair(x, y) {
-    if (crownR(x, y) < 1 && y <= bangEdge(x)) return true;
-    const left = 45 - 3 * Math.sin(clamp((y - 60) / 100) * Math.PI);
-    return y > 60 && x >= left && x <= 80 - Math.max(0, y - 120) * 0.12 && y <= sideBottom(x);
-  }
-
-  function faceMask(x, y) {
-    return ell(x, y, 100, 92, 40, 52) < 1 || ell(x, y, 110, 118, 28, 28) < 1 || inPoly(NOSE, x, y);
-  }
-  function faceHeight(x, y) {
-    const zA = 40 * Math.sqrt(Math.max(0, 1 - ell(x, y, 100, 92, 40, 52)));
-    const zB = 32 * Math.sqrt(Math.max(0, 1 - ell(x, y, 110, 118, 28, 28)));
-    let z = smax(zA, zB, 5);
-    z -= 4 * Math.exp(-(Math.pow(x - 94, 2) / 70 + Math.pow(y - 105, 2) / 18));     // Augenhöhlen
-    z -= 3 * Math.exp(-(Math.pow(x - 126, 2) / 35 + Math.pow(y - 104, 2) / 16));
-    z += 3 * Math.exp(-(Math.pow(x - 121, 2) / 45 + Math.pow(y - 114, 2) / 30));    // Wangenknochen
-    z += 2 * Math.exp(-(Math.pow(x - 116, 2) / 40 + Math.pow(y - 141, 2) / 12));    // Kinn
-    return z;
-  }
-
-  function eyeShape(e, x, y) {
-    const u = (x - e.cx) / e.hw, v = (y - e.cy) / e.hh;
-    if (Math.abs(u) > 1) return null;
-    const lim = Math.pow(1 - u * u, 0.7);
-    if (Math.abs(v) > lim) return null;
-    return { u, v, lim };
-  }
-
-  function buildBoy() {
-    const px = new Uint32Array(W * H);
-    const mat = new Uint8Array(W * H);          // 1 Hemd 2 Hals 3 Haar 4 Gesicht 6 Augenweiß 8 Wimpern 9 Unterlid
-    const set = (x, y, c, m) => { const i = y * W + x; px[i] = c; mat[i] = m; };
-    const lit = (n) => Math.max(0, n[0] * KEY[0] + n[1] * KEY[1] + n[2] * KEY[2]);
-    const faceN = (x, y) => {
-      const zx = (faceHeight(x + 1, y) - faceHeight(x - 1, y)) / 2;
-      const zy = (faceHeight(x, y + 1) - faceHeight(x, y - 1)) / 2;
-      return norm3(-zx, -zy, 1.2);
-    };
-
-    for (let y = 18; y < H; y++) for (let x = 0; x < 214; x++) {
-      // ---- Haar ----
-      if (inHair(x, y)) {
-        const inCrown = crownR(x, y) < 1 && y <= bangEdge(x);
-        let n;
-        if (inCrown) {
-          const u = clamp((x - 100) / 55, -1, 1), v = clamp((y - 70) / 48, -1, 1);
-          n = norm3(u, v * 0.8, Math.sqrt(Math.max(0, 1 - u * u - v * v)) + 0.15);
-        } else {                                                             // Seitensträhnen: senkrechter Zylinder
-          const u = clamp((x - 70) / 26, -1, 1);
-          n = norm3(u * 0.95, 0.15, Math.sqrt(1 - u * u) + 0.15);
-        }
-        const ang = Math.atan2(y - 24, x - 100);
-        const k = ang * 7 + (vnoise(x * 0.05, y * 0.05) - 0.5) * 0.6;
-        const idx = Math.floor(k), f = k - idx;
-        const prof = 1 - Math.pow(Math.abs(2 * f - 1), 2);                  // Bündel: Mitte hell
-        const gap = f < 0.07 || f > 0.93 ? 0.12 : 0;                         // feine Fuge
-        const r = Math.sqrt(ell(x, y, 100, 70, 55, 48));
-        const sheen = r > 0.52 && r < 0.63 && x > 84 && y < 90 ? 0.2 : 0;    // Glanzring
-        const val = clamp(0.1 + lit(n) * 0.72 + (prof - 0.5) * 0.22 + (hash(idx, 3) - 0.5) * 0.1 + sheen - gap - Math.max(0, y - 92) * 0.009);
-        const rim = rimOf(n);
-        set(x, y, rim > 0.5 ? pick(P.rim, rim * 1.1, x, y) : pick(P.hair, val, x, y), 3);
-        continue;
-      }
-
-      // ---- Augen (mandelförmig) ----
-      let isEye = false;
-      for (const e of EYES) {
-        const s = eyeShape(e, x, y);
-        if (!s) continue;
-        isEye = true;
-        if (s.v < -s.lim + 0.75) set(x, y, OUT, 8);                          // kräftige Oberlidlinie
-        else if (s.v > s.lim - 0.42) set(x, y, P.skin[2], 9);                // Unterlid
-        else set(x, y, pick(P.sclera, 0.62 - Math.max(0, -s.v) * 0.25 + s.u * 0.12, x, y), 6);
-        break;
-      }
-      if (isEye) continue;
-
-      // ---- Gesicht ----
-      if (faceMask(x, y)) {
-        const n = faceN(x, y);
-        let v = clamp(0.16 + 0.85 * Math.pow(lit(n), 0.85) + 0.06 * n[2]);
-        const be = bangEdge(x);
-        if (y > be) v *= 0.35 + 0.65 * clamp((y - be) / 7);                  // Pony wirft Schatten
-        if (x < 84) v *= 0.6;
-        if (inPoly(NOSE, x, y)) v = y < 120 - (x - 133) * 0.2 ? 0.86 : 0.55; // Nasenkeil: oben Licht
-        const nsh = Math.hypot((x - 130) / 4, (y - 120) / 5);                // Nase wirft Schatten nach links
-        if (nsh < 1 && !inPoly(NOSE, x, y)) v *= 0.72;
-        set(x, y, pick(P.skin, v, x, y), 4);
-        continue;
-      }
-
-      // ---- Hemd ----
-      const u = (x - 104) / 102;
-      const shirtTop = 146 + 72 * u * u;
-      if (y >= shirtTop && Math.abs(u) <= 1) {
-        if (inPoly(V_NECK, x, y)) {
-          const v = 0.12 + (y - 146) * 0.004 + (x > 106 ? 0.12 : 0);
-          set(x, y, pick(P.skin, v, x, y), 2); continue;
-        }
-        const nz = Math.sqrt(Math.max(0, 1 - u * u));
-        const wr = (fbm(x * 0.05, y * 0.08) - 0.5) * 0.5;
-        const n = norm3(u * 0.9 + wr * 0.6, -0.3 + Math.max(0, 158 - y) * 0.03, nz + 0.1);
-        const val = clamp(0.05 + lit(n) * 0.95 + wr * 0.25);
-        const rim = rimOf(n);
-        const vx = (x + (y - 190) * 0.1 + 900) % 9, vy = (y + (x - 104) * 0.04 + 900) % 11;
-        const hrow = Math.floor((y + (x - 104) * 0.04 + 900) / 11);
-        let c;
-        if (rim > 0.22) c = pick(P.rim, rim * 0.9, x, y);
-        else if (vx < 1.3) c = pick(P.navy, val + 0.1, x, y);
-        else if (vy < 1.3) c = pick(hrow % 2 ? P.sand : P.navy, val + 0.1, x, y);
-        else c = pick(P.shirt, val, x, y);
-        const [dl1] = segInfo(x, y, 91, 146, 106, 172), [dl2] = segInfo(x, y, 121, 146, 106, 172);
-        const dl = Math.min(dl1, dl2);
-        if (dl < 4.5) c = pick(P.shirt, val + 0.22, x, y);
-        else if (dl < 5.6) c = OUT;
-        set(x, y, c, 1); continue;
-      }
-      // ---- Hals ----
-      if (y >= 126 && x >= 92 && x <= 122) {
-        const uu = (x - 107) / 15;
-        const n = norm3(uu, 0.1, Math.sqrt(Math.max(0, 1 - uu * uu)) + 0.1);
-        const v = clamp(0.04 + lit(n) * 0.7) * clamp((y - 136) / 14 + 0.25);
-        set(x, y, pick(P.skin, v, x, y), 2);
-      }
-    }
-
-    // ---- Brauen, Nasenloch, Mund ----
-    for (let x = 120; x <= 132; x++) { const y = Math.round(99.5 - (x - 120) * 0.1); if (mat[y * W + x] === 4) set(x, y, P.hair[1], 4); }
-    for (let x = 85; x <= 102; x++) { const y = 100; if (mat[y * W + x] === 4) set(x, y, P.hair[1], 4); }
-    set(138, 123, P.skin[1], 4); set(139, 123, P.skin[1], 4);
-    for (let t = 0; t <= 1; t += 0.01) {
-      const a = 1 - t;
-      const mx = Math.round(a * a * 113 + 2 * a * t * 121 + t * t * 130);
-      const my = Math.round(a * a * 133 + 2 * a * t * 135 + t * t * 130.5);
-      set(mx, my, pack(hex('#2a0c16')), 4);
-      if (t > 0.2 && t < 0.7) set(mx, my + 1, P.skin[4], 4);                  // Unterlippe im Licht
-    }
-    set(131, 130, P.skin[2], 4);                                              // Mundwinkel (Grinsen)
-
-    // ---- Konturen ----
-    const snap = px.slice(), ms = mat.slice();
-    for (let y = 1; y < H - 1; y++) for (let x = 1; x < 214; x++) {
-      const i = y * W + x;
-      if (snap[i] === 0) {
-        if (snap[i - 1] || snap[i + 1] || snap[i - W] || snap[i + W]) px[i] = OUT;
-      } else if (ms[i] === 4 && (ms[i - W] === 3 || ms[i - 1] === 3 || ms[i + 1] === 3)) {
-        px[i] = P.skin[0];
-      }
-    }
-    return { px, mat, canvas: bufCanvas(px, W, H) };
+  function buildPortrait() {
+    const pw = PORTRAIT[0].length, ph = PORTRAIT.length;
+    const buf = new Uint32Array(pw * ph);
+    const cols = {};
+    for (const k in PORTRAIT_PAL) cols[k] = pack(hex(PORTRAIT_PAL[k]));
+    PORTRAIT.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') buf[y * pw + x] = cols[ch]; }));
+    const small = bufCanvas(buf, pw, ph);
+    const [c, x] = canvasOf(pw * PS, ph * PS);
+    x.drawImage(small, 0, 0, pw * PS, ph * PS);
+    return c;
   }
 
   // ---------- Karten ----------
@@ -457,8 +340,7 @@
   }
 
   // ---------- Zustand ----------
-  let ctx = null, bgC, fogA, fogB, beamC, vigC, boy, eyeImg, eyeBuf, glowC;
-  const EYE_BOX = { x: 84, y: 98, w: 52, h: 16 };
+  let ctx = null, bgC, fogA, fogB, beamC, vigC, portraitC, glowC;
   const st = {
     t: 0, tx: 300, ty: 150, gx: [0, 0], gy: [0, 0], blink: -1, nextBlink: 2,
     hover: null, pointer: null,
@@ -528,7 +410,7 @@
     const lx = -L.corner + CW / 2, ly = -CHh / 2;
     return [L.px + SQ * lx + L.sh * ly, L.py + ly];
   }
-  const TARGET = { x: 176, y: 106, s: 3 };
+  const TARGET = { x: 186, y: 108, s: 3 };
   const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
   function drawPulled() {
@@ -572,39 +454,22 @@
   }
 
   function drawEyes(dy, blink) {
-    const b = eyeBuf, bx = EYE_BOX.x, by = EYE_BOX.y, bw = EYE_BOX.w;
-    for (let y = 0; y < EYE_BOX.h; y++) for (let x = 0; x < bw; x++) b[y * bw + x] = boy.px[(by + y) * W + bx + x];
+    const P_ = PORTRAIT_PAL, cell = (gx, gy, col) => { ctx.fillStyle = col; ctx.fillRect(POX + gx * PS, POY + dy + gy * PS, PS, PS); };
     EYES.forEach((e, k) => {
-      const ddx = st.tx - e.cx, ddy = st.ty - e.cy, dist = Math.hypot(ddx, ddy) || 1;
-      const m = Math.min(1, dist / 50);
-      st.gx[k] += ((ddx / dist) * m * e.maxX - st.gx[k]) * 0.2;
-      st.gy[k] += ((ddy / dist) * m * e.maxY - st.gy[k]) * 0.2;
-      const icx = e.cx + Math.round(st.gx[k]), icy = e.cy + Math.round(st.gy[k]);
-      for (let y = Math.floor(e.cy - e.hh) - 1; y <= Math.ceil(e.cy + e.hh) + 1; y++) {
-        for (let x = Math.floor(e.cx - e.hw) - 1; x <= Math.ceil(e.cx + e.hw) + 1; x++) {
-          const m2 = boy.mat[y * W + x];
-          if (m2 !== 6 && m2 !== 8 && m2 !== 9) continue;
-          const bi = (y - by) * bw + (x - bx);
-          const s = eyeShape(e, x, y);
-          if (!s) continue;
-          if (blink > 0) {                                     // Lid schließt sich
-            const lidEdge = -s.lim + 2 * s.lim * blink;
-            if (s.v < lidEdge) { b[bi] = Math.abs(s.v - lidEdge) < 0.45 ? OUT : P.skin[3]; continue; }
-          }
-          if (m2 !== 6) continue;
-          const d = Math.hypot(x - icx, y - icy);
-          if (d > e.ir) continue;
-          let c;
-          if (d <= e.pr) c = OUT;
-          else if (d > e.ir - 0.9) c = P.iris[0];
-          else c = pick(P.iris, 0.45 + ((y - icy) / e.ir) * 0.45 + (x - icx > 0 ? 0.15 : 0), x, y);
-          if (s.v < -s.lim + 1.2) c = P.iris[0];             // Schatten vom Oberlid
-          if (x === icx + 1 && y === icy - 1) c = P.iris[3];
-          b[bi] = c;
-        }
+      const ex = POX + (e.x0 + e.w / 2) * PS, ey = POY + (e.y0 + 1) * PS;
+      const dx = st.tx - ex;
+      const want = dx < -30 ? 0 : dx > 22 ? 2 : 1;
+      if (st.gx[k] !== want) { st.gt = (st.gt || 0) + 1; st.gx[k] = want; }
+      if (blink > 0.35) {                                              // Lid zu
+        for (let i = 0; i < e.w; i++) { cell(e.x0 + i, e.y0, P_[e.lid]); cell(e.x0 + i, e.y0 + 1, blink > 0.7 ? P_.K : P_.W); }
+        if (blink > 0.7) for (let i = 0; i < e.w; i++) cell(e.x0 + i, e.y0 + 1, P_.K);
+        return;
       }
+      const ix = e.irisX[want];
+      cell(ix, e.y0, P_.i); cell(ix + 1, e.y0, P_.i);
+      cell(ix, e.y0 + 1, P_.i); cell(ix + 1, e.y0 + 1, P_.I);
+      cell(want === 0 ? ix : ix + 1, e.y0, P_.K);                       // Pupille zur Blickrichtung
     });
-    ctx.putImageData(eyeImg, bx, by + dy);
   }
 
   function drawFloaters(dt) {
@@ -674,7 +539,7 @@
     ctx.globalAlpha = 1;
 
     const dy = Math.sin(st.t * 1.5) > 0.45 ? 1 : 0;
-    ctx.drawImage(boy.canvas, 0, dy);
+    ctx.drawImage(portraitC, POX, POY + dy);
 
     // Blickziel: gezogene Karte > Hover-Karte > Maus > Turm
     if (st.pull) {
@@ -724,9 +589,7 @@
       fogB = buildFog(8.7, [150, 200, 210], 206, 16, 1.0);
       beamC = buildBeams();
       vigC = buildVignette();
-      boy = buildBoy();
-      eyeBuf = new Uint32Array(EYE_BOX.w * EYE_BOX.h);
-      eyeImg = new ImageData(new Uint8ClampedArray(eyeBuf.buffer), EYE_BOX.w, EYE_BOX.h);
+      portraitC = buildPortrait();
       tower = layoutTower(chapters);
       glowC = chapters.map((c) => buildGlow(c.color));
       initParticles();
