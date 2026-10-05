@@ -5,15 +5,20 @@
   const SIZE = 64;
   const WALK_FRAMES = 8;
 
+  // Figur ist 20x61 Pixel groß, links oben bei (OX, OY) im 64x64-Sprite
+  const OX = 22, OY = 2;
+
   const C = {
-    skin: '#e9c3a5', skinShade: '#d3a98d', stubble: '#c29a82',
-    beanie: '#6e5d52', beanieShade: '#584a41', beanieLight: '#85746a',
-    frame: '#d6c593', eye: '#2a2420', mouth: '#b5826f',
-    tee: '#25252a', teeShade: '#17171b', teeLight: '#38383f',
-    pants: '#1f1f24', pantsShade: '#131316', pantsLight: '#303037',
-    belt: '#0d0d10', buckle: '#c3c6ce',
-    sock: '#1d1d2e', sockShade: '#11111b',
-    outline: '#0a0e2c',
+    skin: '#e6c4a8', skinShade: '#c9a284', ear: '#d4aa8a',
+    brow: '#8a6a50', beard: '#b09a7a', mouth: '#9a6e55',
+    beanie: '#6b5a4a', beanieLight: '#7f6c5a', beanieDark: '#4a3b30', beanieShade: '#54443a',
+    hair: '#6e5a48',
+    frame: '#b5a583', white: '#f3f3f3', pupil: '#222226',
+    tee: '#202024', teeLight: '#35353d', teeDark: '#0b0b0f',
+    pants: '#1a1b20', pantsLight: '#2b2f38', pantsDark: '#0a0a0e',
+    belt: '#0b0b0e', buckle: '#d8d8d8',
+    sock: '#20263c', sockLight: '#333c5c',
+    gold: '#d4b050',
   };
 
   function makeCanvas() {
@@ -22,32 +27,14 @@
     return c;
   }
 
+  // r(col, row, breite, höhe, farbe) – Koordinaten relativ zur Figur
   function painter(ctx) {
     return {
-      rect(x, y, w, h, col) {
+      r(c, r, w, h, col) {
         ctx.fillStyle = col;
-        ctx.fillRect(Math.round(x), Math.round(y), w, h);
+        ctx.fillRect(OX + Math.round(c), OY + Math.round(r), w, h);
       },
     };
-  }
-
-  // 1px dunkle Kontur um alle gefüllten Pixel
-  function addOutline(ctx) {
-    const img = ctx.getImageData(0, 0, SIZE, SIZE);
-    const d = img.data;
-    const filled = (x, y) =>
-      x >= 0 && y >= 0 && x < SIZE && y < SIZE && d[(y * SIZE + x) * 4 + 3] > 0;
-    const out = [];
-    for (let y = 0; y < SIZE; y++) {
-      for (let x = 0; x < SIZE; x++) {
-        if (filled(x, y)) continue;
-        if (filled(x - 1, y) || filled(x + 1, y) || filled(x, y - 1) || filled(x, y + 1)) {
-          out.push([x, y]);
-        }
-      }
-    }
-    ctx.fillStyle = C.outline;
-    for (const [x, y] of out) ctx.fillRect(x, y, 1, 1);
   }
 
   // Gehzyklus: s = Beinschwung (-1..1), lift = angehobener Fuß in Pixeln
@@ -56,149 +43,165 @@
     const t = (frame / WALK_FRAMES) * Math.PI * 2;
     return {
       s: Math.sin(t),
-      liftA: Math.round(Math.max(0, Math.cos(t)) * 2.5),
-      liftB: Math.round(Math.max(0, -Math.cos(t)) * 2.5),
+      liftA: Math.round(Math.max(0, Math.cos(t)) * 3),
+      liftB: Math.round(Math.max(0, -Math.cos(t)) * 3),
       bob: Math.abs(Math.sin(t)) > 0.7 ? 0 : -1,
     };
   }
 
+  // Beanie-Rand mit Rippenstreifen
+  function band(p, c0, c1, row, h, b) {
+    p.r(c0, row + b, c1 - c0 + 1, h, C.beanie);
+    for (let c = c0 + 1; c <= c1; c += 2) p.r(c, row + b, 1, h, C.beanieDark);
+  }
+
   // ---------- Vorder- und Rückansicht ----------
   function drawFrontBack(p, cy, back) {
-    const { s, liftA, liftB, bob } = cy;
-    const b = bob;
+    const { s, liftA, liftB, bob: b } = cy;
+    const bottomY = 55;
 
-    // Beine (A = linkes im Bild)
-    const leg = (x, lift, light) => {
-      const top = 40 + b;
-      const bottom = 58 - lift;
-      p.rect(x, top, 8, bottom - top, C.pants);
-      p.rect(light ? x : x + 6, top, 2, bottom - top, light ? C.pantsLight : C.pantsShade);
-      p.rect(x - 1, bottom, 9, 4, C.sock);          // Socke / Fuß
-      p.rect(x - 1, bottom + 3, 9, 1, C.sockShade);
+    // Hosenbund-Block + Beine
+    p.r(4, 34 + b, 12, 8 - b, C.pants);
+    p.r(4, 36 + b, 2, 6 - b, C.pantsLight);
+    p.r(9, 38 + b, 2, 4 - b, C.pantsDark);
+    const leg = (c0, lift, light) => {
+      const bot = bottomY - lift;
+      p.r(c0, 42, 5, bot - 42, C.pants);
+      p.r(light ? c0 : c0 + 4, 42, 1, bot - 42, light ? C.pantsLight : C.pantsDark);
+      p.r(c0, bot, 5, 6, C.sock);                  // Socke / Fuß
+      p.r(c0, bot, 1, 4, C.sockLight);
+      p.r(light ? c0 - 1 : c0, bot + 4, 6, 2, C.sock);   // Fuß nach außen
     };
-    leg(23, liftA, true);
-    leg(33, liftB, false);
-    p.rect(31, 46 + b, 2, 8, C.outline);            // Spalt zwischen den Beinen
+    leg(4, liftA, true);
+    leg(11, liftB, false);
 
-    // Arme (schwingen gegengleich)
-    const armOff = (v) => Math.round(v * 2);
-    const arm = (x, off) => {
-      p.rect(x, 22 + b + off, 5, 6, C.tee);         // Ärmel
-      p.rect(x, 22 + b + off, 5, 1, C.teeLight);
-      p.rect(x + 1, 28 + b + off, 3, 11, C.skin);   // Unterarm
-      p.rect(x + 3, 28 + b + off, 1, 11, C.skinShade);
-      p.rect(x + 1, 39 + b + off, 3, 3, C.skin);    // Hand
+    // Arme (Länge wechselt gegengleich = Armschwung)
+    const arm = (c0, off, shadeCol, left) => {
+      const len = 15 + off;
+      p.r(c0, 25 + b, 2, len, C.skin);
+      p.r(shadeCol, 25 + b, 1, len, C.skinShade);
+      p.r(c0, 25 + b + len - 3, 2, 2, C.skin);     // Hand
+      p.r(c0, 25 + b + len - 1, 2, 1, C.skinShade);
+      if (!left) p.r(c0, 35 + b + off, 2, 1, C.gold);   // Armband
     };
-    arm(18, armOff(-s));
-    arm(41, armOff(s));
+    arm(0, Math.round(-s * 2), 1, true);
+    arm(18, Math.round(s * 2), 18, false);
 
     // Oberkörper
-    p.rect(25, 21 + b, 15, 1, C.tee);
-    p.rect(23, 22 + b, 19, 17, C.tee);
-    p.rect(23, 22 + b, 19, 1, C.teeLight);
-    p.rect(23, 22 + b, 2, 16, C.teeLight);
-    p.rect(40, 24 + b, 2, 14, C.teeShade);
-    p.rect(26, 30 + b, 1, 7, C.teeShade);           // Falten
-    p.rect(37, 28 + b, 1, 8, C.teeShade);
-
+    p.r(2, 19 + b, 16, 1, C.tee);
+    p.r(1, 20 + b, 18, 5, C.tee);
+    p.r(3, 25 + b, 14, 7, C.tee);
+    p.r(2, 20 + b, 3, 2, C.teeLight);
+    p.r(1, 21 + b, 1, 3, C.teeLight);
+    p.r(18, 21 + b, 1, 3, C.teeLight);
+    p.r(7, 25 + b, 1, 4, C.teeLight);
+    p.r(8, 26 + b, 1, 3, C.teeDark);
+    p.r(12, 29 + b, 1, 3, C.teeDark);
+    p.r(13, 29 + b, 1, 2, C.teeLight);
     // Gürtel
-    p.rect(23, 38 + b, 19, 2, C.belt);
-    if (!back) p.rect(31, 38 + b, 3, 2, C.buckle);
+    p.r(4, 32 + b, 12, 2, C.belt);
+    if (!back) p.r(9, 32 + b, 2, 1, C.buckle);
 
     // Hals
-    p.rect(29, 19 + b, 7, 3, C.skinShade);
-    if (!back) p.rect(29, 21 + b, 7, 1, C.tee);
+    p.r(7, 17 + b, 6, 2, C.skinShade);
+    if (!back) p.r(8, 19 + b, 4, 1, C.skinShade);
+    else p.r(8, 19 + b, 4, 1, C.tee);
 
     drawHeadFront(p, b, back);
   }
 
+  function drawBeanieTop(p, b) {
+    p.r(6, 0 + b, 8, 1, C.beanie);
+    p.r(5, 1 + b, 10, 1, C.beanie);
+    p.r(4, 2 + b, 12, 2, C.beanie);
+    p.r(5, 1 + b, 4, 2, C.beanieLight);            // Glanzfleck
+    p.r(13, 2 + b, 3, 2, C.beanieShade);           // Schatten rechts
+    p.r(14, 1 + b, 1, 1, C.beanieShade);
+  }
+
   function drawHeadFront(p, b, back) {
-    // Ohren
-    p.rect(25, 12 + b, 2, 4, C.skinShade);
-    p.rect(38, 12 + b, 2, 4, C.skinShade);
+    drawBeanieTop(p, b);
+    band(p, 3, 16, 4, 2, b);
+    p.r(14, 4 + b, 3, 2, C.beanieShade);
+    for (let c = 14; c <= 16; c += 2) p.r(c, 4 + b, 1, 2, C.beanieDark);
     if (back) {
-      // Hinterkopf: Beanie bis in den Nacken, darunter Haaransatz
-      p.rect(26, 4 + b, 13, 14, C.beanie);
-      p.rect(25, 7 + b, 15, 9, C.beanie);
-      p.rect(26, 15 + b, 13, 2, C.beanieShade);
-      p.rect(27, 17 + b, 11, 2, C.skinShade);
-      p.rect(26, 4 + b, 13, 1, C.beanieLight);
-      for (let y = 6; y < 15; y += 2) p.rect(27, y + b, 11, 1, C.beanieShade);
+      // Hinterkopf: Beanie weiter runter, darunter Haaransatz
+      p.r(3, 4 + b, 14, 6, C.beanie);
+      band(p, 3, 16, 8, 2, b);
+      p.r(4, 6 + b, 12, 2, C.beanie);
+      p.r(4, 10 + b, 12, 6, C.hair);
+      p.r(5, 16 + b, 10, 1, C.skinShade);
+      p.r(3, 9 + b, 1, 3, C.ear);
+      p.r(16, 9 + b, 1, 3, C.ear);
       return;
     }
     // Gesicht
-    p.rect(26, 9 + b, 13, 10, C.skin);
-    p.rect(27, 19 + b, 11, 1, C.skin);
-    p.rect(26, 16 + b, 13, 3, C.stubble);           // Bart-Schatten
-    p.rect(28, 19 + b, 9, 1, C.stubble);
-    p.rect(30, 17 + b, 5, 1, C.mouth);              // Mund
-    p.rect(32, 14 + b, 1, 2, C.skinShade);          // Nase
-    // Brille: runde Gläser
-    p.rect(27, 11 + b, 5, 4, C.frame);
-    p.rect(33, 11 + b, 5, 4, C.frame);
-    p.rect(28, 12 + b, 3, 2, '#f4ede0');
-    p.rect(34, 12 + b, 3, 2, '#f4ede0');
-    p.rect(32, 12 + b, 1, 1, C.frame);              // Steg
-    p.rect(29, 12 + b, 1, 2, C.eye);
-    p.rect(35, 12 + b, 1, 2, C.eye);
-    // Beanie
-    p.rect(26, 3 + b, 13, 7, C.beanie);
-    p.rect(25, 5 + b, 15, 5, C.beanie);
-    p.rect(26, 3 + b, 13, 1, C.beanieLight);
-    p.rect(25, 9 + b, 15, 2, C.beanieShade);        // Umschlag unten
-    p.rect(35, 8 + b, 3, 1, C.beanieLight);         // kleines Label
-    for (let y = 4; y < 9; y += 2) p.rect(27, y + b, 11, 1, C.beanieShade);
+    p.r(4, 6 + b, 12, 11, C.skin);
+    p.r(3, 9 + b, 1, 3, C.ear);                    // Ohren
+    p.r(16, 9 + b, 1, 3, C.ear);
+    p.r(5, 8 + b, 4, 1, C.brow);                   // Augenbrauen
+    p.r(11, 8 + b, 4, 1, C.brow);
+    // Brille
+    p.r(4, 9 + b, 12, 3, C.frame);
+    p.r(5, 10 + b, 4, 1, C.skin);
+    p.r(11, 10 + b, 4, 1, C.skin);
+    p.r(6, 10 + b, 1, 1, C.white);  p.r(7, 10 + b, 1, 1, C.pupil);
+    p.r(12, 10 + b, 1, 1, C.white); p.r(13, 10 + b, 1, 1, C.pupil);
+    p.r(9, 11 + b, 2, 2, C.skinShade);             // Nase
+    // Bart + Mund
+    p.r(4, 13 + b, 2, 3, C.beard);
+    p.r(14, 13 + b, 2, 3, C.beard);
+    p.r(5, 15 + b, 10, 2, C.beard);
+    p.r(8, 14 + b, 4, 1, C.mouth);
   }
 
   // ---------- Seitenansicht (nach rechts) ----------
   function drawSide(p, cy) {
-    const { s, liftA, liftB, bob } = cy;
-    const b = bob;
-    const HIP = 40 + b;
+    const { s, liftA, liftB, bob: b } = cy;
+    const HIP = 34 + b;
+    const CX = 9;
 
     const leg = (swing, lift, far) => {
-      const bottom = 58 - lift;
-      for (let y = HIP; y < bottom; y++) {
-        const f = (y - HIP) / (bottom - HIP);
-        // Knie knickt beim angehobenen Bein leicht nach hinten ein
-        const bend = lift > 0 ? -Math.sin(f * Math.PI) * lift * 0.9 : 0;
-        const cx = 32 + swing * f + bend;
-        p.rect(cx - 3, y, 7, 1, far ? C.pantsShade : C.pants);
-        if (!far) p.rect(cx - 3, y, 2, 1, C.pantsLight);
+      const bot = 55 - lift;
+      for (let y = HIP; y < bot; y++) {
+        const f = (y - HIP) / (bot - HIP);
+        const bend = lift > 0 ? -Math.sin(f * Math.PI) * lift * 0.8 : 0;
+        const c = CX + swing * f + bend;
+        p.r(c - 2, y, 5, 1, far ? C.pantsDark : C.pants);
+        if (!far) p.r(c - 2, y, 1, 1, C.pantsLight);
       }
-      const cx = 32 + swing;
-      const sock = far ? C.sockShade : C.sock;
-      p.rect(cx - 3, bottom, 7, 3, sock);
-      p.rect(cx - 3, bottom + 3, 11, 1, sock);      // Fußsohle nach vorn
-      p.rect(cx + 2, bottom + 1, 6, 2, sock);       // Zehen
+      const c = CX + swing;
+      const col = far ? '#161a2a' : C.sock;
+      p.r(c - 2, bot, 5, 4, col);
+      p.r(c - 2, bot + 4, 9, 2, col);              // Fuß nach vorn
     };
 
     const arm = (swing, far) => {
-      const top = 23 + b;
-      const bottom = 40 + b;
+      const top = 21 + b, bottom = 40 + b;
       for (let y = top; y < bottom; y++) {
         const f = (y - top) / (bottom - top);
-        const cx = 32 + swing * f * f * 1.2;
-        const sleeve = y < top + 6;
-        const col = sleeve ? (far ? C.teeShade : C.tee) : (far ? C.skinShade : C.skin);
-        p.rect(cx - 2, y, 5, 1, col);
+        const c = CX + swing * f * f * 1.2;
+        const sleeve = y < top + 5;
+        const col = sleeve ? (far ? C.teeDark : C.tee) : (far ? C.skinShade : C.skin);
+        p.r(c - 1, y, 4, 1, col);
       }
-      p.rect(32 + swing * 1.2 - 2, bottom, 5, 3, far ? C.skinShade : C.skin);
+      const hc = CX + swing * 1.2;
+      p.r(hc - 1, bottom - 3, 4, 3, far ? C.skinShade : C.skin);
+      if (far) p.r(hc - 1, 35 + b, 4, 1, C.gold);
     };
 
     // hinten -> vorne
     arm(Math.round(s * 7), true);
     leg(Math.round(-s * 7), liftB, true);
 
-    // Oberkörper (schmal)
-    p.rect(28, 21 + b, 10, 1, C.tee);
-    p.rect(27, 22 + b, 12, 17, C.tee);
-    p.rect(27, 22 + b, 12, 1, C.teeLight);
-    p.rect(27, 22 + b, 2, 16, C.teeShade);          // Rücken im Schatten
-    p.rect(36, 26 + b, 1, 9, C.teeShade);
-    p.rect(27, 38 + b, 12, 2, C.belt);
-    p.rect(37, 38 + b, 2, 2, C.buckle);
-    p.rect(30, 19 + b, 5, 3, C.skinShade);          // Hals
+    p.r(6, 19 + b, 8, 1, C.tee);
+    p.r(5, 20 + b, 10, 12, C.tee);
+    p.r(5, 20 + b, 2, 11, C.teeDark);
+    p.r(6, 20 + b, 4, 2, C.teeLight);
+    p.r(11, 25 + b, 1, 4, C.teeDark);
+    p.r(5, 32 + b, 10, 2, C.belt);
+    p.r(13, 32 + b, 2, 1, C.buckle);
+    p.r(7, 17 + b, 5, 2, C.skinShade);              // Hals
 
     leg(Math.round(s * 7), liftA, false);
     arm(Math.round(-s * 7), false);
@@ -208,27 +211,28 @@
 
   function drawHeadSide(p, b) {
     // Gesicht + Nase
-    p.rect(28, 9 + b, 11, 10, C.skin);
-    p.rect(39, 14 + b, 2, 2, C.skin);               // Nase
-    p.rect(28, 16 + b, 11, 3, C.stubble);           // Bart
-    p.rect(29, 19 + b, 9, 1, C.stubble);
-    p.rect(36, 17 + b, 3, 1, C.mouth);
-    // Ohr
-    p.rect(30, 12 + b, 3, 4, C.skinShade);
+    p.r(7, 6 + b, 8, 11, C.skin);
+    p.r(15, 11 + b, 2, 2, C.skin);
+    p.r(8, 9 + b, 2, 3, C.ear);                     // Ohr
+    p.r(11, 8 + b, 4, 1, C.brow);
     // Brille
-    p.rect(34, 11 + b, 5, 4, C.frame);
-    p.rect(35, 12 + b, 3, 2, '#f4ede0');
-    p.rect(37, 12 + b, 1, 2, C.eye);
-    p.rect(30, 12 + b, 5, 1, C.frame);              // Bügel
-    // Beanie (hinten tiefer)
-    p.rect(27, 3 + b, 12, 7, C.beanie);
-    p.rect(26, 5 + b, 14, 5, C.beanie);
-    p.rect(27, 3 + b, 12, 1, C.beanieLight);
-    p.rect(26, 9 + b, 14, 2, C.beanieShade);
-    p.rect(26, 10 + b, 5, 5, C.beanie);             // Nacken-Teil
-    p.rect(26, 14 + b, 5, 1, C.beanieShade);
-    p.rect(35, 8 + b, 3, 1, C.beanieLight);
-    for (let y = 4; y < 9; y += 2) p.rect(28, y + b, 10, 1, C.beanieShade);
+    p.r(11, 9 + b, 5, 3, C.frame);
+    p.r(12, 10 + b, 3, 1, C.skin);
+    p.r(13, 10 + b, 1, 1, C.white); p.r(14, 10 + b, 1, 1, C.pupil);
+    p.r(7, 9 + b, 4, 1, C.frame);                   // Bügel
+    // Bart
+    p.r(8, 12 + b, 5, 4, C.beard);
+    p.r(7, 15 + b, 8, 2, C.beard);
+    p.r(12, 14 + b, 3, 1, C.mouth);
+    // Hinterkopf
+    p.r(4, 6 + b, 4, 7, C.hair);
+    // Beanie
+    p.r(6, 0 + b, 8, 1, C.beanie);
+    p.r(5, 1 + b, 10, 1, C.beanie);
+    p.r(4, 2 + b, 12, 2, C.beanie);
+    p.r(5, 1 + b, 4, 2, C.beanieLight);
+    band(p, 3, 15, 4, 2, b);
+    p.r(4, 6 + b, 3, 3, C.beanie);                  // Nacken-Teil
   }
 
   // ---------- Frames erzeugen ----------
@@ -240,7 +244,6 @@
     if (dir === 'down') drawFrontBack(p, cy, false);
     else if (dir === 'up') drawFrontBack(p, cy, true);
     else drawSide(p, cy);
-    addOutline(ctx);
     return c;
   }
 
