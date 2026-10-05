@@ -30,7 +30,7 @@
     dir: 'left',
     tx: null,                        // Ziel (nur noch links/rechts)
     walked: 0,
-    mode: 'free',                    // free | settling | lying | rising
+    mode: 'free',                    // free | settling | lying | rising | memory
     timer: 0,
     onArrive: null,
     queued: null,                    // Klick, der nach dem Aufstehen ausgeführt wird
@@ -43,6 +43,50 @@
   const caption = document.getElementById('caption');
   const say = (t) => { if (caption) caption.textContent = t; };
 
+  // ---------- Erinnerungen ----------
+  const STORE = 'lenz-memory-found';
+  const found = new Set();
+  try { JSON.parse(localStorage.getItem(STORE) || '[]').forEach((id) => found.add(id)); } catch (e) { /* ohne Speicher spielen */ }
+  const counter = document.getElementById('counter');
+  function updateCounter() {
+    if (!counter) return;
+    counter.textContent = found.size >= MEMORIES.length
+      ? 'Alle Erinnerungen gefunden \u2726'
+      : 'Erinnerungen ' + found.size + '/' + MEMORIES.length;
+  }
+  updateCounter();
+  let hover = null;
+
+  const hotspotAt = (x, y) => MEMORIES.find((m) =>
+    x >= m.rect.x && x <= m.rect.x + m.rect.w && y >= m.rect.y && y <= m.rect.y + m.rect.h) || null;
+
+  // Foto-Ausschnitt aus dem Zimmer (ohne Figur) für das Erinnerungs-Bild
+  function snapshot(m) {
+    const [s, sx] = (() => { const c = document.createElement('canvas'); c.width = W; c.height = H; return [c, c.getContext('2d')]; })();
+    sx.imageSmoothingEnabled = false;
+    const cx = m.rect.x + m.rect.w / 2, cy = m.rect.y + m.rect.h / 2;
+    const cam = Math.min(World.W - W, Math.max(0, cx - W / 2));
+    World.drawBack(sx, cam);
+    const out = document.createElement('canvas');
+    out.width = 96; out.height = 72;
+    const px = Math.min(W - 96, Math.max(0, cx - cam - 48));
+    const py = Math.min(H - 72, Math.max(0, cy - 36));
+    out.getContext('2d').drawImage(s, px, py, 96, 72, 0, 0, 96, 72);
+    return out;
+  }
+
+  function openMemory(m) {
+    player.mode = 'memory';
+    player.dir = (m.rect.x + m.rect.w / 2) < player.x ? 'left' : 'right';
+    say('');
+    MemoryUI.show(m, snapshot(m), () => {
+      found.add(m.id);
+      try { localStorage.setItem(STORE, JSON.stringify([...found])); } catch (e) { /* egal */ }
+      updateCounter();
+      player.mode = 'free';
+    });
+  }
+
   const camTarget = () => Math.min(World.W - W, Math.max(0, player.x - W / 2));
 
   function walkTo(x, showMarker) {
@@ -52,7 +96,11 @@
   }
 
   function handleClick(x, y) {
-    if (Bed.hit(x, y)) {
+    const m = hotspotAt(x, y);
+    if (m) {
+      player.onArrive = () => openMemory(m);
+      walkTo(m.rect.x + m.rect.w / 2, false);
+    } else if (Bed.hit(x, y)) {
       player.onArrive = settle;
       walkTo(Bed.STAND.x, false);
     } else {
@@ -81,6 +129,20 @@
     if (player.mode === 'lying') rise({ x, y });
     else if (player.mode === 'free') handleClick(x, y);
   });
+
+  canvas.addEventListener('pointermove', (e) => {
+    const r = canvas.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * W + Math.round(camX);
+    const y = ((e.clientY - r.top) / r.height) * H;
+    const h = player.mode === 'free' ? hotspotAt(x, y) : null;
+    const target = h || (player.mode === 'free' && Bed.hit(x, y) ? { title: 'Das Bett' } : null);
+    if ((h || null) !== hover) {
+      hover = h || null;
+      canvas.style.cursor = hover ? 'pointer' : '';
+    }
+    if (player.mode === 'free') say(target ? target.title + (h && !found.has(h.id) ? ' \u2726' : '') : '');
+  });
+  canvas.addEventListener('pointerleave', () => { hover = null; canvas.style.cursor = ''; if (player.mode === 'free') say(''); });
 
   // Tastatur: Pfeile oder A/D
   const keyDir = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
@@ -180,6 +242,28 @@
     }
   }
 
+  function drawHotspots() {
+    if (player.mode !== 'free') return;
+    MEMORIES.forEach((m, i) => {
+      const cx = Math.round(m.rect.x + m.rect.w / 2), cy = Math.round(m.rect.y + m.rect.h / 2);
+      if (!found.has(m.id) && (clock * 1.2 + i * 0.37) % 1 < 0.5) {
+        ctx.fillStyle = '#ffe9a0';
+        ctx.fillRect(cx - 1, cy, 3, 1);
+        ctx.fillRect(cx, cy - 1, 1, 3);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(cx, cy, 1, 1);
+      }
+      if (m === hover) {                        // Ecken-Rahmen beim Drüberfahren
+        const { x, y, w, h } = m.rect;
+        ctx.fillStyle = '#ffffff';
+        [[x, y], [x + w - 3, y], [x, y + h - 1], [x + w - 3, y + h - 1]].forEach(([px, py], k) => {
+          ctx.fillRect(px, py, 3, 1);
+          ctx.fillRect(k % 2 ? px + 2 : px, k < 2 ? py : py - 2, 1, 3);
+        });
+      }
+    });
+  }
+
   function draw() {
     const cam = Math.round(camX);
     World.drawBack(ctx, cam);
@@ -203,6 +287,7 @@
       ctx.drawImage(img, x - HALF, y - FEET);
     }
     World.drawLight(ctx, clock);
+    drawHotspots();
     ctx.restore();
 
     World.drawFront(ctx, cam);
@@ -239,6 +324,9 @@
     mood = 0;
     say('');
     marker = null;
+    hover = null;
+    MemoryUI.hide(true);
+    updateCounter();
     camX = camTarget();
     fit();
     last = performance.now();
@@ -247,6 +335,7 @@
 
   function stop() {
     running = false;
+    MemoryUI.hide(true);
   }
 
   // Für Homescreen, Tests und Debugging

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lenz Memory's</title>
-  <link rel="stylesheet" href="src/style.css?v=6">
+  <link rel="stylesheet" href="src/style.css?v=7">
 </head>
 <body>
   <!-- Homescreen -->
@@ -33,12 +33,25 @@
     <button id="back" type="button">&larr; Menü</button>
     <canvas id="game"></canvas>
     <div id="caption"></div>
+    <div id="counter"></div>
+    <div id="memory" class="hidden">
+      <div class="card">
+        <canvas id="memoryPic" width="96" height="72"></canvas>
+        <div class="body">
+          <h3 id="memoryTitle"></h3>
+          <p id="memoryText"></p>
+          <p class="hint" id="memoryHint"></p>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <script src="src/sprite.js?v=6"></script>
-  <script src="src/bed.js?v=6"></script>
-  <script src="src/world.js?v=6"></script>
-  <script src="src/game.js?v=6"></script>
-  <script src="src/home.js?v=6"></script>
+  <script src="src/sprite.js?v=7"></script>
+  <script src="src/bed.js?v=7"></script>
+  <script src="src/world.js?v=7"></script>
+  <script src="src/memories.js?v=7"></script>
+  <script src="src/memory.js?v=7"></script>
+  <script src="src/game.js?v=7"></script>
+  <script src="src/home.js?v=7"></script>
 </body>
 </html>
