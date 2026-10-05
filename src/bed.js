@@ -1,10 +1,11 @@
 // Das Bett in der rechten Ecke (nach deinem Foto: weiße Matratze, dunkler
 // Rahmen, gelb gestreifte Decke) und Lenz, wie er darin liegt.
 (function () {
-  const BX = 840;                 // linke Kante des Bettes in der Spielwelt (rechtes Weltende)
+  const BX = 24;                  // linke Kante des Bettes (linkes Weltende)
+  const DY = -52;                 // Bett steht auf Höhe y=118 (Beine), Koordinaten unten sind relativ
   const TOP = 146;                // Oberkante der Matratze
-  const AREA = { x: BX, y: 116, w: 86, h: 56 };   // anklickbarer Bereich
-  const STAND = { x: BX - 12, y: 170 };           // hier steht Lenz neben dem Bett
+  const AREA = { x: BX, y: 116 + DY, w: 86, h: 56 };   // anklickbarer Bereich
+  const STAND = { x: BX + 86 + 14, y: 130 };        // hier steht Lenz rechts neben dem Bett
 
   const K = {
     frame: '#1b1b25', frameLight: '#2c2c3a',
@@ -22,7 +23,7 @@
 
   function rect(ctx, x, y, w, h, c) {
     ctx.fillStyle = c;
-    ctx.fillRect(Math.round(x), Math.round(y), w, h);
+    ctx.fillRect(Math.round(x), Math.round(y) + DY, w, h);
   }
 
   // Höhe der Decke über der Matratze an Position dx (0..86)
@@ -43,6 +44,7 @@
   }
 
   function drawFrame(ctx) {
+    rect(ctx, BX - 2, 170, 90, 3, 'rgba(50,25,10,0.35)');           // Schatten am Boden
     rect(ctx, BX, 120, 6, 50, K.frame);                 // Kopfteil
     rect(ctx, BX, 120, 6, 2, K.frameLight);
     rect(ctx, BX + 80, 140, 6, 30, K.frame);            // Fußteil

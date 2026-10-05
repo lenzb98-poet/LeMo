@@ -1,11 +1,11 @@
 (function () {
-  const W = 320, H = 180;            // Bildschirm in Pixeln, wird hochskaliert
+  const W = World.VW, H = World.VH;   // Bildschirm in Pixeln, wird hochskaliert
   const SPEED = 90;                  // Pixel pro Sekunde
   const PX_PER_FRAME = 4;            // Distanz pro Animationsframe (kein Rutschen)
   const FEET = 62;                   // y-Position der Füße im 64px-Sprite
   const HALF = Sprite.SIZE / 2;
-  const MIN_X = 24;
-  const MAX_X = Bed.STAND.x;         // am Bett ist Schluss
+  const MIN_X = Bed.STAND.x;         // am Bett ist Schluss
+  const MAX_X = World.W - 24;
 
   const canvas = document.getElementById('game');
   canvas.width = W;
@@ -26,7 +26,7 @@
   World.build();
 
   const player = {
-    x: MAX_X - 40,                   // Start: ganz rechts, neben dem Bett
+    x: MAX_X - 56,                   // Start: rechts im Zimmer
     dir: 'left',
     tx: null,                        // Ziel (nur noch links/rechts)
     walked: 0,
@@ -62,7 +62,7 @@
   }
 
   function settle() {
-    player.dir = 'right';
+    player.dir = 'left';
     player.mode = 'settling';
     player.timer = 0.6;
   }
@@ -162,7 +162,7 @@
   }
 
   function drawShadow(x, y) {
-    ctx.fillStyle = 'rgba(8, 16, 70, 0.35)';
+    ctx.fillStyle = 'rgba(50, 25, 10, 0.38)';
     ctx.fillRect(x - 11, y - 1, 22, 3);
     ctx.fillRect(x - 8, y - 2, 16, 5);
   }
@@ -182,7 +182,7 @@
 
   function draw() {
     const cam = Math.round(camX);
-    World.drawBack(ctx, cam, clock);
+    World.drawBack(ctx, cam);
 
     // Weltkoordinaten: alles zwischen save/restore wird mit der Kamera verschoben
     ctx.save();
@@ -202,6 +202,7 @@
         : set.idle;
       ctx.drawImage(img, x - HALF, y - FEET);
     }
+    World.drawLight(ctx, clock);
     ctx.restore();
 
     World.drawFront(ctx, cam);

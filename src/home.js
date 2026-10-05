@@ -9,7 +9,7 @@
     { title: 'Heute',           desc: 'Wo ich jetzt stehe.',            playable: false },
   ];
   const DEMOS = [
-    { title: 'Laufen', desc: 'Klick irgendwo hin – die Figur läuft.', playable: true, run: () => showGame() },
+    { title: 'Dein Zimmer', desc: 'Lauf durch das Zimmer – oder leg dich ins Bett.', playable: true, run: () => showGame() },
   ];
 
   const home = document.getElementById('home');
