@@ -107,7 +107,10 @@
     stage.classList.remove('hidden');
     Game.start();
   }
+  // Aufruf aus der neuen Levelauswahl (legacy/?demo): direkt ins Zimmer, zurück führt zur Levelauswahl
+  const fromLevelSelect = new URLSearchParams(location.search).has('demo');
   function showHome() {
+    if (fromLevelSelect) { location.href = '../'; return; }
     Game.stop();
     stage.classList.add('hidden');
     home.classList.remove('hidden');
@@ -120,4 +123,5 @@
     if (!stage.classList.contains('hidden')) showHome();
     else if (open !== null) closeChapter();
   });
+  if (fromLevelSelect) showGame();
 })();

@@ -1,26 +1,55 @@
 # LeMo
 
-LeMo (Lenz Memory's) – ein Spiel, in dem man Erinnerungen durchspielen kann.
+LeMo (Lenz Memory's) – ein kleines Pixel-Spiel über mein Leben. Läuft als Web-App im Browser (auch iPad/Safari).
 
-## Stand
+## Level „Nebeneinander“ (9–16 Jahre)
 
-- **Hauptmenü** im Stil von Dead Cells: dunkle, abstrakte Welt mit Nebel, Funken und Lichtstrahlen; links Lenz als anatomisch aufgebautes Pixel-Porträt (52×64, Beanie, Brille, Bart, AirPod, Cord-Hemd; folgt mit den Augen der Maus, blinzelt), rechts ein echtes Kartenhaus. Jedes Λ-Kartenpaar ist ein Kapitel – anklicken zieht die Karte aus dem Turm, sie dreht sich um und zeigt das Kapitel (der Turm wackelt, die Partnerkarte kippt nach)
-- **Demo "Dein Zimmer"**: dein Schlafzimmer nach dem Foto als scrollende Welt mit Parallax-Ebenen (draußen hinterm Fenster, Wand, Boden, Möbel, Vordergrundpflanzen). Lenz startet rechts und läuft per Klick oder Pfeiltasten/A/D nach links und rechts
-- **Erinnerungen finden**: Gegenstände im Zimmer (Zweig, Stuhl, Pflanze, Fenster, Spiegel, Bild) anklicken → Lenz läuft hin, es öffnet sich eine Erinnerung als altes Foto mit Text. Ungefundene glitzern, oben steht ein Zähler (wird im Browser gespeichert). Die Texte stehen in `src/memories.js` und sind noch Platzhalter
-- **Bett** am linken Ende des Zimmers: anklicken → Lenz legt sich niedergeschlagen hin, der Bildschirm wird dunkel; ein Klick irgendwo lässt ihn aufstehen
+Kernidee: Kontakt klappt nicht gegenüber, sondern nebeneinander. Vier Abschnitte + Ende:
 
-## Starten
+| Abschnitt | Inhalt | Stand |
+|---|---|---|
+| A Spielplatz | Fangen, Kisten zur Bude stapeln | Platzhalter (Meilenstein 6) |
+| B Schulhof | Gesprächskreise mit zähen Wortkacheln, Farben werden grau | Platzhalter (Meilenstein 5) |
+| C Zimmer | Mini-Spiel am Computer, Jahreszeiten, Skateboard im Licht | Platzhalter (Meilenstein 4) |
+| D Skatepark | Skaten, goldener Faden zwischen Skatern, die nebeneinander fahren | Platzhalter (Meilenstein 2) |
+| Ende | Sitzplatz, Sonnenuntergang, Titel | Platzhalter (Meilenstein 3) |
 
-`index.html` im Browser öffnen – kein Build nötig.
+**Meilenstein 1 (Grundgerüst) ist fertig:** Levelauswahl, Spielschleife (60 Updates/s), Tastatur + Touch, Szenenwechsel, Sprite-Loader mit PNG-Austausch, Speichern, Manifest.
+
+## Spielen
+
+- **iPad:** Seite in Safari öffnen → Teilen → „Zum Home-Bildschirm“. Dann startet LeMo im Vollbild wie eine App. Querformat.
+- **Lokal am Computer:** ES-Module brauchen einen Webserver, z. B. `python3 -m http.server` im Projektordner, dann `http://localhost:8000` öffnen.
+
+### Steuerung
+
+| | Touch | Tastatur |
+|---|---|---|
+| Bewegen | Steuerkreuz links unten | Pfeiltasten / WASD |
+| A – Springen / Ollie | rechter runder Knopf | Leertaste |
+| B – Aktion | linker runder Knopf | E |
+| Pause | Knopf oben rechts | Esc / P |
+| Debug: Abschnitt wählen | oben links in die Ecke tippen | 1–4 (5 = Ende, 0 = Levelauswahl) |
+
+## Selbst anpassen
+
+- **Texte:** alle in `src/texts.js` (Platzhalter in [eckigen Klammern] ersetzen).
+- **Eigene Grafiken:** PNG mit dem Sprite-Namen in `assets/png/` legen (z. B. `teen_walk.png`, waagerechter Streifen, alle Bilder gleich groß). Siehe `assets/png/LIESMICH.txt`.
+- **Grafiken als Code:** `src/assets/sprites.js` (Figuren), `src/assets/tiles.js` (Kacheln 16×16). Jedes Zeichen = Platz in der Farbpalette, `.` = durchsichtig.
+- **Farben:** `src/assets/palettes.js` – je Abschnitt max. 16 Farben.
 
 ## Aufbau
 
-- `src/home.js` – Hauptmenü; alle Kapitel stehen oben in `CHAPTERS` (Reihenfolge = Platz im Kartenhaus)
-- `src/menuart.js` – die Menü-Grafik: Hintergrund und Kartenhaus per Code gemalt; die Figur steht als Pixel-Raster in `PORTRAIT` (ein Zeichen = ein Pixel, Farben in `PORTRAIT_PAL`)
-- `src/game.js` – Spiel (Klick zum Laufen)
-- `src/world.js` – das Zimmer mit Parallax-Ebenen (Faktoren oben in `F`)
-- `src/memories.js` – deine Erinnerungen (Texte und anklickbare Bereiche)
-- `src/memory.js` – Anzeige einer Erinnerung
-- `src/bed.js` – Bett und liegende Figur
-- `src/sprite.js` – Die Figur, per Code gezeichnet
-- `src/style.css` – Look
+```
+index.html, style.css, manifest.json, icons/
+src/
+  main.js            Start: alles zusammenstecken
+  texts.js           alle Texte
+  engine/            loop, input, touch, renderer, camera, physics, scenes, save
+  scenes/            menu (Levelauswahl), a_spielplatz, b_schulhof, c_zimmer, d_skatepark, ende, testraum
+  assets/            palettes, sprites, tiles, font (Pixel-Schrift), loader
+assets/png/          eigene PNG-Grafiken (ersetzen die Code-Grafiken)
+legacy/              der alte Prototyp „Dein Zimmer“ (Bett, Erinnerungen) – erreichbar über die Levelauswahl
+```
+
+Technik: reines HTML + JavaScript (ES-Module) + Canvas 2D, kein Build-Schritt. Internes Bild 320×180, nur in ganzen Faktoren hochskaliert.

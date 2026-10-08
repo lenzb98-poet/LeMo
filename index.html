@@ -2,62 +2,24 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LeMo">
+  <meta name="theme-color" content="#05060c">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
   <title>LeMo</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap">
-  <link rel="stylesheet" href="src/style.css?v=15">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Hauptmenü -->
-  <main id="home" class="screen">
-    <div id="menuStage">
-      <canvas id="menuArt"></canvas>
-      <header class="brand">
-        <h1>LeMo</h1>
-        <p class="sub">Lenz Memory's</p>
-      </header>
-      <p id="menuCaption"></p>
-      <div id="slots"></div>
-      <section id="chapter" class="hidden" aria-live="polite">
-        <div class="kicker" id="chKicker"></div>
-        <h2 id="chTitle"></h2>
-        <p id="chDesc"></p>
-        <p id="chStatus"></p>
-        <div class="actions">
-          <button type="button" id="chPlay">Spielen</button>
-          <button type="button" id="chBack">Zurück in den Turm</button>
-        </div>
-        <p class="tip">Oder tippe neben die Karte, um sie zurückzustecken.</p>
-      </section>
-    </div>
-  </main>
-
-  <!-- Spiel -->
-  <div id="stage" class="screen hidden">
-    <button id="back" type="button">&larr; Menü</button>
-    <canvas id="game"></canvas>
-    <div id="caption"></div>
-    <div id="counter"></div>
-    <div id="memory" class="hidden">
-      <div class="card">
-        <canvas id="memoryPic" width="96" height="72"></canvas>
-        <div class="body">
-          <h3 id="memoryTitle"></h3>
-          <p id="memoryText"></p>
-          <p class="hint" id="memoryHint"></p>
-        </div>
-      </div>
-    </div>
+  <div id="app">
+    <canvas id="screen" width="320" height="180"></canvas>
+    <div id="boot">LeMo</div>
+    <div id="rotate"></div>
   </div>
-
-  <script src="src/sprite.js?v=15"></script>
-  <script src="src/bed.js?v=15"></script>
-  <script src="src/world.js?v=15"></script>
-  <script src="src/memories.js?v=15"></script>
-  <script src="src/memory.js?v=15"></script>
-  <script src="src/game.js?v=15"></script>
-  <script src="src/menuart.js?v=15"></script>
-  <script src="src/home.js?v=15"></script>
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>

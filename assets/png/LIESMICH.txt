@@ -1,0 +1,9 @@
+Hier kommen später eigene Grafiken hin (z. B. aus Pixaki).
+
+Name = Name des Sprites aus src/assets/sprites.js oder src/assets/tiles.js, z. B.:
+  teen_walk.png   -> ersetzt die Gehanimation des Jugendlichen
+  teen_idle.png   -> ersetzt das Stehen
+
+Format: waagerechter Streifen, alle Einzelbilder gleich groß, durchsichtiger Hintergrund.
+  teen_walk.png = 4 Bilder à 16 x 32 Pixel = 64 x 32 Pixel
+Das Spiel nimmt die PNG automatisch, sobald sie hier liegt. Kein Code nötig.
