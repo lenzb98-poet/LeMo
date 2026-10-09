@@ -11,6 +11,7 @@ import { SPRITES } from './assets/sprites.js';
 import { TILES } from './assets/tiles.js';
 import { TEXTS } from './texts.js';
 
+import start from './scenes/start.js';
 import menu from './scenes/menu.js';
 import spielplatz from './scenes/a_spielplatz.js';
 import schulhof from './scenes/b_schulhof.js';
@@ -44,13 +45,14 @@ async function boot() {
   });
   game.scenes = scenes;
 
-  // Debug: Abschnitte direkt anspringen – Tasten 1–4 (5 = Ende, 0 = Levelauswahl)
+  // Debug: Abschnitte direkt anspringen – Tasten 1–4 (5 = Ende, 0 = Levelauswahl, 9 = Startraum)
   // oder auf dem iPad oben links in die Ecke tippen.
-  const jump = { 1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'ende', 0: 'menu' };
+  const jump = { 1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'ende', 0: 'menu', 9: 'start' };
   const debug = createDebugMenu(root, [
     ...['A', 'B', 'C', 'D'].map((id) => ({ label: id + ' ' + TEXTS.ui.sections[id], run: () => scenes.go(id, { frames: 12 }) })),
     { label: TEXTS.ui.sections.ende, run: () => scenes.go('ende', { frames: 12 }) },
     { label: TEXTS.ui.toMenu, run: () => scenes.go('menu', { frames: 12 }) },
+    { label: TEXTS.ui.toStart, run: () => scenes.go('start', { frames: 12 }) },
   ]);
   input.onDigit = (n) => { if (jump[n]) scenes.go(jump[n], { frames: 12 }); };
 
@@ -62,6 +64,7 @@ async function boot() {
 
   await loadAssets([SPRITES, TILES]);
 
+  scenes.register('start', start);
   scenes.register('menu', menu);
   scenes.register('A', spielplatz);
   scenes.register('B', schulhof);
@@ -71,7 +74,7 @@ async function boot() {
 
   const loading = document.getElementById('boot');
   if (loading) loading.remove();
-  scenes.go('menu');
+  scenes.go('start');
 
   startLoop(
     () => { input.update(); scenes.update(); },

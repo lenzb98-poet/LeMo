@@ -17,6 +17,8 @@ export const TEXTS = {
     pause: 'Pause',
     resume: 'Weiter',
     toMenu: 'Zur Levelauswahl',
+    toStart: 'Startraum',
+    startHint: 'Tippe auf den Stuhl am iPad',
     rotate: 'Bitte ins Querformat drehen',
     sections: { A: 'Spielplatz', B: 'Schulhof', C: 'Zimmer', D: 'Skatepark', ende: 'Ende' },
   },

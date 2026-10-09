@@ -14,6 +14,8 @@ Kernidee: Kontakt klappt nicht gegenüber, sondern nebeneinander. Vier Abschnitt
 | D Skatepark | Skaten, goldener Faden zwischen Skatern, die nebeneinander fahren | Platzhalter (Meilenstein 2) |
 | Ende | Sitzplatz, Sonnenuntergang, Titel | Platzhalter (Meilenstein 3) |
 
+**Start:** Beim Öffnen steht Lenz im Klinikraum (`assets/raeume/klinikraum.png`, Szene `src/scenes/start.js`). Auf den Boden tippen = dorthin gehen. Auf den Stuhl am iPad tippen = hinsetzen → Levelauswahl.
+
 **Meilenstein 1 (Grundgerüst) ist fertig:** Levelauswahl, Spielschleife (60 Updates/s), Tastatur + Touch, Szenenwechsel, Sprite-Loader mit PNG-Austausch, Speichern, Manifest.
 
 ## Spielen
@@ -29,7 +31,7 @@ Kernidee: Kontakt klappt nicht gegenüber, sondern nebeneinander. Vier Abschnitt
 | A – Springen / Ollie | rechter runder Knopf | Leertaste |
 | B – Aktion | linker runder Knopf | E |
 | Pause | Knopf oben rechts | Esc / P |
-| Debug: Abschnitt wählen | oben links in die Ecke tippen | 1–4 (5 = Ende, 0 = Levelauswahl) |
+| Debug: Abschnitt wählen | oben links in die Ecke tippen | 1–4 (5 = Ende, 0 = Levelauswahl, 9 = Startraum) |
 
 ## Selbst anpassen
 
@@ -46,9 +48,10 @@ src/
   main.js            Start: alles zusammenstecken
   texts.js           alle Texte
   engine/            loop, input, touch, renderer, camera, physics, scenes, save
-  scenes/            menu (Levelauswahl), a_spielplatz, b_schulhof, c_zimmer, d_skatepark, ende, testraum
-  assets/            palettes, sprites, tiles, font (Pixel-Schrift), loader
+  scenes/            start (Klinikraum), menu (Levelauswahl), a_spielplatz, b_schulhof, c_zimmer, d_skatepark, ende, testraum
+  assets/            palettes, sprites, tiles, font (Pixel-Schrift), loader, lenz64 (Figur aus der Demo)
 assets/png/          eigene PNG-Grafiken (ersetzen die Code-Grafiken)
+assets/raeume/       fertige Raumbilder (Klinikraum)
 legacy/              der alte Prototyp „Dein Zimmer“ (Bett, Erinnerungen) – erreichbar über die Levelauswahl
 ```
 
